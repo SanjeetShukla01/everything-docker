@@ -1,0 +1,17 @@
+version: '3'
+services:
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
+    ports:
+      - 4040:4040   # Spark UI
+      - 6066:6066   # Spark Master
+      - 7077:7077   # Spark Master (cluster manager)
+      - 8080:8080   # Spark Master UI
+      - 8081:8081   # Spark Worker UI
+    environment:
+      - PYSPARK_PYTHON=python
+      - PYSPARK_DRIVER_PYTHON=python
