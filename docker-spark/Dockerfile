@@ -8,6 +8,8 @@ ENV HADOOP_VERSION=3
 # Download and extract Apache Spark
 # Download and install Spark
 RUN apt-get update && \
+    add-apt-repository universe && \
+    apt-get update && \
     apt-get install -y wget curl vim python3, python3-pip && \
     wget -q https://downloads.apache.org/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz && \
     tar -xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz -C /opt && \
