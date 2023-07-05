@@ -1,7 +1,13 @@
-https://stackoverflow.com/questions/76593113/spark-application-run-inside-a-docker-container-i-see-only-driver-node-but-no
+# Spark One Node setup in Docker
 
-and step into the docker container
+This is apache spark one node setup to test Apache spark and for learning purpose. This is an alternative to VM's that 
+are big in volume and take too much resources. 
 
+In order to start the Spark container you can run following command
+This command uses dockerfile
+```docker run -p 4040:4040 --hostname localhost --rm -it my-spark-docker:latest /bin/bash```
+
+A more sophisticated command is given below which also mounts volume
 ```
 hostfolder="$(pwd)"
 dockerfolder="/home/sam/app"
@@ -11,36 +17,56 @@ docker run --rm -it \
 python_spark_custom_build:latest /bin/bash
 ```
 
-![img.png](resources/terminal.png)
+The Docker container can also be launched using docker-compose
+```
+    docker-compose up -d
+```
 
-![img_1.png](resources/spark_ui.png)
+In order to launch pyspark you can go to the container and type pyspark as given below
 
-
-Q1. I see there is only driver and no worked node. Can driver act as worker also
-
-Q2: How to create a cluser within my container. I want to have a setup of 1 driver and 4 worker node in this container. So that parallelization can be achieved.
-
-I am planning to use ECS task to run my spark scripts using docker containers. I dont want to use EMR or glue.
-
-I am fine to have one node (acting as worker and driver) given that multiple executors are running so the parallelization is achieved.
-
-My understanding is driver and executors are the core of paralleization. Irrespective of they run in seperate node or all together is one node
+![pyspark_terminal](resources/terminal.png)
 
 
+Test if spark is setup properly and working file by running below code
 
-docker run --rm -it --net="host" -v "C:\Users\Sanjeet\Documents\git_pod\everything-docker\docker-spark":"/home/sam/app"  python_spark_custom_build:latest /bin/bash
+```
+import pyspark.sql.functions as f
 
-"C:\Users\Sanjeet\Documents\git_pod\everything-docker\docker-spark"
+textfile_df = spark.read.text("textfile.txt")
+textfile.show()
+df = textfile.withColumn('wordCount', f.size(f.split(f.col('value'), ' ')))
+df.show()
+wc_df = textfile.withColumn('word', f.explode(f.split(f.col('value'), ' '))).groupBy('word').count().sort('count', ascending=False).show()
+wc_df.show()
+```
 
-docker run --rm -it --net="host" my-spark-docker :latest /bin/bash
-
-
-docker run -p 4040:4040 --hostname localhost --rm -it --net="host" my-spark-docker:latest /bin/bash
-
-WARNING: Published ports are discarded when using host network mode
-
-
-docker run -p 4040:4040 --hostname localhost --rm -it my-spark-docker:latest /bin/bash
+![word_count](resources/word_count.png)
 
 
+![word_frequency_count](resources/word_frequency_count.png)
+
+
+In order to launch SparkUI you can go to localhost:4040
+Spark UI screenshot given below
+
+![spark_ui](resources/spark_ui.png)
+
+
+
+For Windows:
+
+```
+set hostfolder=%cd%
+set dockerfolder=/home/sam/app
+
+echo %hostfolder%
+echo %dockerfolder%
+
+```
+
+Reference:
+https://stackoverflow.com/questions/76593113/spark-application-run-inside-a-docker-container-i-see-only-driver-node-but-no
+
+
+Next Step: To setup spark cluster with multiple worker node. 
 https://medium.com/@MarinAgli1/using-hostnames-to-access-hadoop-resources-running-on-docker-5860cd7aeec1
