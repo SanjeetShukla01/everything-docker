@@ -77,7 +77,7 @@ RUN cp -p "${SPARK_HOME}/conf/spark-defaults.conf.template" "${SPARK_HOME}/conf/
 # create group and user
 ############################################
 
-ARG UNAME=simha
+ARG UNAME=sam
 ARG UID=1000
 ARG GID=1000
 
@@ -91,8 +91,8 @@ RUN groupadd -g $GID $UNAME
 RUN useradd -u $UID -g $GID -m -s /bin/bash $UNAME
 # -m creates home directory
 
-# change permissions of /home/simha to 1000:100
-RUN chown $UID:$GID /home/simha
+# change permissions of /home/sam to 1000:100
+RUN chown $UID:$GID /home/sam
 
 
 ###########################################
@@ -110,11 +110,11 @@ RUN cat /etc/sudoers
 # spark history server
 ############################
 
-# ALLOW spark history server (mount sparks_events folder locally to /home/simha/app/spark_events)
+# ALLOW spark history server (mount sparks_events folder locally to /home/sam/app/spark_events)
 
 RUN echo 'spark.eventLog.enabled true' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
-    echo 'spark.eventLog.dir file:///home/simha/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
-    echo 'spark.history.fs.logDirectory file:///home/simha/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf"
+    echo 'spark.eventLog.dir file:///home/sam/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.history.fs.logDirectory file:///home/sam/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf"
 
 RUN mkdir /home/spark/logs
 RUN chown $UID:$GID /home/spark/logs
@@ -127,3 +127,4 @@ USER $UNAME
 
 RUN mkdir -p /home/$UNAME/app
 WORKDIR /home/$UNAME/app
+CMD ["sh", "-c", "tail -f /dev/null"]
