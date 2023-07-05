@@ -11,9 +11,9 @@ docker run --rm -it \
 python_spark_custom_build:latest /bin/bash
 ```
 
-![img.png](resources/img.png)
+![img.png](resources/terminal.png)
 
-![img_1.png](resources/img_1.png)
+![img_1.png](resources/spark_ui.png)
 
 
 Q1. I see there is only driver and no worked node. Can driver act as worker also
