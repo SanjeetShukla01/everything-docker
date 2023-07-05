@@ -70,3 +70,4 @@ https://stackoverflow.com/questions/76593113/spark-application-run-inside-a-dock
 
 Next Step: To setup spark cluster with multiple worker node. 
 https://medium.com/@MarinAgli1/using-hostnames-to-access-hadoop-resources-running-on-docker-5860cd7aeec1
+https://medium.com/@marcovillarreal_40011/creating-a-spark-standalone-cluster-with-docker-and-docker-compose-ba9d743a157f
