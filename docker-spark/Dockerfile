@@ -1,47 +1,129 @@
-# Use a base image with Java and Spark pre-installed
-FROM openjdk:11.0.11-jre-slim-buster as builder
+FROM python:3.10.9-buster
 
-# Set Spark version
-ENV SPARK_VERSION=3.4.1
-ENV HADOOP_VERSION=3
+###########################################
+# Upgrade the packages
+###########################################
+# Download latest listing of available packages:
+RUN apt-get -y update
+# Upgrade already installed packages:
+RUN apt-get -y upgrade
+# Install a new package:
 
-# Download and extract Apache Spark
-# Download and install Spark
-RUN apt-get update && \
-    add-apt-repository universe && \
-    apt-get update && \
-    apt-get install -y wget curl vim python3, python3-pip && \
-    wget -q https://downloads.apache.org/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz && \
-    tar -xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz -C /opt && \
-    rm spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz
-
-
-# Set Spark home environment variable
-ENV SPARK_HOME=/opt/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
-
-# Set Spark and Python paths
-ENV PATH=$PATH:$SPARK_HOME/bin
-ENV PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH:$SPARK_HOME/python/lib/py4j-0.10.9-src.zip
+###########################################
+# install tree package
+###########################################
+# Install a new package:
+RUN apt-get -y install tree
 
 
-# Expose Spark web UI and PySpark ports
-EXPOSE 4040 6066 7077 8080 8081
+#############################################
+# install pipenv
+############################################
+ENV PIPENV_VENV_IN_PROJECT=1
 
-# Set the working directory
-WORKDIR /app
+# ENV PIPENV_VENV_IN_PROJECT=1 is important: it causes the resuling virtual environment to be created as /app/.venv. Without this the environment gets created somewhere surprising, such as /root/.local/share/virtualenvs/app-4PlAip0Q - which makes it much harder to write automation scripts later on.
 
-# # Copy the necessary files
-# COPY requirements.txt /app/requirements.txt
-#
-# # Install Python dependencies
-# RUN pip install -r requirements.txt
+RUN python -m pip install --upgrade pip
 
-# Copy the entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
+RUN pip install --no-cache-dir pipenv
 
-# Set execute permissions for the entrypoint script
-RUN chmod +x /app/entrypoint.sh
+RUN pip install --no-cache-dir jupyter
 
-# Start Spark master and worker when the container starts
-CMD ["/app/entrypoint.sh"]
+RUN pip install --no-cache-dir py4j
 
+RUN pip install --no-cache-dir findspark
+
+
+#############################################
+# install java and spark and hadoop
+# Java is required for scala and scala is required for Spark
+############################################
+
+
+# VERSIONS
+ENV SPARK_VERSION=3.2.4 \
+HADOOP_VERSION=3.2 \
+JAVA_VERSION=11
+
+RUN apt-get update --yes && \
+    apt-get install --yes --no-install-recommends \
+    "openjdk-${JAVA_VERSION}-jre-headless" \
+    ca-certificates-java  \
+    curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
+RUN java --version
+
+# DOWNLOAD SPARK AND INSTALL
+RUN DOWNLOAD_URL_SPARK="https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz" \
+    && wget --verbose -O apache-spark.tgz  "${DOWNLOAD_URL_SPARK}"\
+    && mkdir -p /home/spark \
+    && tar -xf apache-spark.tgz -C /home/spark --strip-components=1 \
+    && rm apache-spark.tgz
+
+
+# SET SPARK ENV VARIABLES
+ENV SPARK_HOME="/home/spark"
+ENV PATH="${SPARK_HOME}/bin/:${PATH}"
+
+# Fix Spark installation for Java 11 and Apache Arrow library
+# see: https://github.com/apache/spark/pull/27356, https://spark.apache.org/docs/latest/#downloading
+RUN cp -p "${SPARK_HOME}/conf/spark-defaults.conf.template" "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.driver.extraJavaOptions -Dio.netty.tryReflectionSetAccessible=true' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.executor.extraJavaOptions -Dio.netty.tryReflectionSetAccessible=true' >> "${SPARK_HOME}/conf/spark-defaults.conf"
+
+############################################
+# create group and user
+############################################
+
+ARG UNAME=simha
+ARG UID=1000
+ARG GID=1000
+
+
+RUN cat /etc/passwd
+
+# create group
+RUN groupadd -g $GID $UNAME
+
+# create a user with userid 1000 and gid 100
+RUN useradd -u $UID -g $GID -m -s /bin/bash $UNAME
+# -m creates home directory
+
+# change permissions of /home/simha to 1000:100
+RUN chown $UID:$GID /home/simha
+
+
+###########################################
+# add sudo
+###########################################
+
+RUN apt-get update --yes
+RUN apt-get -y install sudo
+RUN apt-get -y install vim
+RUN cat /etc/sudoers
+RUN echo "$UNAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN cat /etc/sudoers
+
+#############################
+# spark history server
+############################
+
+# ALLOW spark history server (mount sparks_events folder locally to /home/simha/app/spark_events)
+
+RUN echo 'spark.eventLog.enabled true' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.eventLog.dir file:///home/simha/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf" && \
+    echo 'spark.history.fs.logDirectory file:///home/simha/app/spark_events' >> "${SPARK_HOME}/conf/spark-defaults.conf"
+
+RUN mkdir /home/spark/logs
+RUN chown $UID:$GID /home/spark/logs
+
+###########################################
+# change working dir and user
+###########################################
+
+USER $UNAME
+
+RUN mkdir -p /home/$UNAME/app
+WORKDIR /home/$UNAME/app

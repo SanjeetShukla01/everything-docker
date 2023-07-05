@@ -38,7 +38,7 @@ To use the script, make sure it has executable permissions (chmod +x start.sh). 
 Examples:
 
 ```./start.sh build ```: will build the Docker image using docker-compose build.
-```./start.sh run will run``` the container using docker-compose up -d.
+```./start.sh run``` will run the container using docker-compose up -d.
 ```./start.sh build_and_run``` will both build the Docker image and run the container using the respective functions.
 
 
