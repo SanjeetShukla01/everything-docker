@@ -53,6 +53,24 @@ Spark UI screenshot given below
 
 
 
+
+### Start Container using start.sh:
+To use the script, make sure it has executable permissions (chmod +x start.sh). Then you can run the script with the desired command-line argument.
+
+Examples:
+
+```./start.sh build ```: will build the Docker image using docker-compose build.
+```./start.sh run``` will run the container using docker-compose up -d.
+```./start.sh build_and_run``` will both build the Docker image and run the container using the respective functions.
+
+
+### Start Container using start.bat (Windows):
+```start.bat build```: Executes the :build function to build the Docker image.
+```start.bat run```: Executes the :run function to run the Docker container.
+```start.bat build_and_run```: Executes the :build_and_run function to build the image and run the container.
+
+
+
 For Windows:
 
 ```
