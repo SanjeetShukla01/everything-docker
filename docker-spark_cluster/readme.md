@@ -18,3 +18,7 @@
 
 - Spark without docker
   - https://medium.com/@sandeepsinh/spark-installation-on-single-node-7e4cf4514c29
+
+https://medium.com/agile-lab-engineering/spark-3-0-first-hands-on-approach-with-adaptive-query-execution-part-1-ff987f66b5c0
+
+https://medium.com/@MarinAgli1/using-hostnames-to-access-hadoop-resources-running-on-docker-5860cd7aeec1

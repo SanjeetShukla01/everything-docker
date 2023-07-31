@@ -14,7 +14,11 @@ dockerfolder="/home/sam/app"
 docker run --rm -it \
   --net="host" \
   -v ${hostfolder}:${dockerfolder} \
-python_spark_custom_build:latest /bin/bash
+my-spark-docker:latest /bin/bash
+```
+
+```]
+docker run --rm -it   --net="host"   -v ${hostfolder}:${dockerfolder} --entrypoint bash my-spark-docker:latest
 ```
 
 The Docker container can also be launched using docker-compose
@@ -33,10 +37,10 @@ Test if spark is setup properly and working file by running below code
 import pyspark.sql.functions as f
 
 textfile_df = spark.read.text("textfile.txt")
-textfile.show()
-df = textfile.withColumn('wordCount', f.size(f.split(f.col('value'), ' ')))
+textfile_df.show()
+df = textfile_df.withColumn('wordCount', f.size(f.split(f.col('value'), ' ')))
 df.show()
-wc_df = textfile.withColumn('word', f.explode(f.split(f.col('value'), ' '))).groupBy('word').count().sort('count', ascending=False).show()
+wc_df = textfile_df.withColumn('word', f.explode(f.split(f.col('value'), ' '))).groupBy('word').count().sort('count', ascending=False)
 wc_df.show()
 ```
 
@@ -89,3 +93,9 @@ https://stackoverflow.com/questions/76593113/spark-application-run-inside-a-dock
 Next Step: To setup spark cluster with multiple worker node. 
 https://medium.com/@MarinAgli1/using-hostnames-to-access-hadoop-resources-running-on-docker-5860cd7aeec1
 https://medium.com/@marcovillarreal_40011/creating-a-spark-standalone-cluster-with-docker-and-docker-compose-ba9d743a157f
+https://morioh.com/p/dddfc1cc1d2b
+
+
+https://stackoverflow.com/questions/43316376/what-does-net-host-option-in-docker-command-really-do
+https://github.com/cluster-apps-on-docker/spark-standalone-cluster-on-docker
+https://www.linkedin.com/pulse/how-use-pyspark-jupyter-notebook-codersarts/
